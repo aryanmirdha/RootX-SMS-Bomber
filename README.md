@@ -18,7 +18,10 @@
 
 ## 💻 Installation (Kali Linux)
 
-git clone https://github.com/YOUR_USERNAME/RootX-SMS-Bomber.git
+git clone https://github.com/aryanmirdha/RootX-SMS-Bomber.git
+
 cd RootX-SMS-Bomber
+
 pip install -r requirements.txt
+
 python3 RootX-SMS-Bomber.py
